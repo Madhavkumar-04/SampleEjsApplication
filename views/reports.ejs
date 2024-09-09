@@ -1,0 +1,95 @@
+<%- include('partials/header') %>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Include the left section with navigation -->
+            <%- include('sections/left-section') %>
+
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                    <h2 class="mt-4">Reports</h2>
+
+                    <!-- List of Previous Reports -->
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-4">
+                            <div class="card" onclick="showChart('report1')">
+                                <div class="card-body">
+                                    <h5 class="card-title">Report 1</h5>
+                                    <p class="card-text">Summary of Report 1.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card" onclick="showChart('report2')">
+                                <div class="card-body">
+                                    <h5 class="card-title">Report 2</h5>
+                                    <p class="card-text">Summary of Report 2.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card" onclick="showChart('report3')">
+                                <div class="card-body">
+                                    <h5 class="card-title">Report 3</h5>
+                                    <p class="card-text">Summary of Report 3.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Section -->
+                    <h2 class="mt-5">Report Data Visualization</h2>
+                    <canvas id="reportChart"></canvas>
+                </main>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+        <script>
+            // Example data for the charts
+            const reportData = {
+                report1: {
+                    labels: ['January', 'February', 'March'],
+                    data: [10, 20, 30]
+                },
+                report2: {
+                    labels: ['April', 'May', 'June'],
+                    data: [15, 25, 35]
+                },
+                report3: {
+                    labels: ['July', 'August', 'September'],
+                    data: [20, 30, 40]
+                }
+            };
+
+            const ctx = document.getElementById('reportChart').getContext('2d');
+            let reportChart;
+
+            function showChart(reportId) {
+                if (reportChart) {
+                    reportChart.destroy();
+                }
+
+                const data = reportData[reportId];
+                reportChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Report Data',
+                            data: data.data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        </script>

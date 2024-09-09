@@ -1,0 +1,58 @@
+<%- include('partials/header') %>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Include the left section with navigation -->
+            <%- include('sections/left-section') %>
+
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                    <h2 class="mt-4">Dashboard</h2>
+
+                    <!-- Chart Section -->
+                    <h2 class="mt-5">Chart Data Visualization</h2>
+                    <canvas id="dashboardChart"></canvas>
+                </main>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+        <script>
+            const ctx = document.getElementById('dashboardChart').getContext('2d');
+            let dashboardChart;
+
+            function fetchChartData() {
+                fetch('/dashboard/data')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (dashboardChart) {
+                            dashboardChart.destroy();
+                        }
+
+                        dashboardChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: 'Monthly Data',
+                                    data: data.data,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error fetching data:', error));
+            }
+
+            // Fetch data when the page loads
+            document.addEventListener('DOMContentLoaded', fetchChartData);
+        </script>
