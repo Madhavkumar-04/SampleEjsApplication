@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MQTT Subscriber</title>
+        <link rel="stylesheet" href="/styles.css"> <!-- Link to your CSS file if needed -->
+    </head>
+
+    <body>
+        <header>
+            <h1>MQTT Subscriber</h1>
+        </header>
+        <main>
+            <form id="subscribeForm" action="/subscribe" method="post">
+                <div>
+                    <label for="topic">Topic:</label>
+                    <input type="text" id="topic" name="topic" required>
+                </div>
+                <button type="submit">Subscribe</button>
+            </form>
+            <div id="messageContainer"></div>
+        </main>
+        <script>
+            document.getElementById('subscribeForm').addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                const topic = document.getElementById('topic').value;
+
+                // Create a payload object
+                const payload = {
+                    topic: topic,
+                };
+
+
+                fetch('/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', // Specify the content type
+                    },
+                    body: JSON.stringify(payload)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('messageContainer').textContent = data.message;
+                    })
+                    .catch(error => {
+                        document.getElementById('messageContainer').textContent = 'Error subscribing to topic.';
+                        console.error('Error:', error);
+                    });
+
+                // You might need to use WebSockets or Server-Sent Events (SSE) to receive real-time updates
+            });
+        </script>
+    </body>
+
+</html>

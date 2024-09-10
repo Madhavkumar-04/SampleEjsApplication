@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MQTT and Socket.IO Example</title>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+
+    <body>
+        <h1>MQTT and Socket.IO Example</h1>
+
+        <div>
+            <h2>Publish Message</h2>
+            <form id="publishForm">
+                <label for="publishTopic">Topic:</label>
+                <input type="text" id="publishTopic" required><br>
+                <label for="publishMessage">Message:</label>
+                <input type="text" id="publishMessage" required><br>
+                <button type="submit">Publish</button>
+            </form>
+        </div>
+
+        <div>
+            <h2>Subscribe to Topic</h2>
+            <form id="subscribeForm">
+                <label for="subscribeTopic">Topic:</label>
+                <input type="text" id="subscribeTopic" required><br>
+                <button type="submit">Subscribe</button>
+            </form>
+        </div>
+
+        <div>
+            <h2>Messages</h2>
+            <ul id="messagesList"></ul>
+        </div>
+
+        <script>
+            const socket = io();
+
+            // Handle publish form submission
+            document.getElementById('publishForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const topic = document.getElementById('publishTopic').value;
+                const message = document.getElementById('publishMessage').value;
+
+                fetch('/publish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ topic, msg: message }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 200) {
+                            alert('Message published successfully');
+                        } else {
+                            alert('Error publishing message: ' + data.message);
+                        }
+                    });
+            });
+
+            // Handle subscribe form submission
+            document.getElementById('subscribeForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const topic = document.getElementById('subscribeTopic').value;
+
+                fetch('/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ topic, socketId: socket.id }), // Pass socketId for client-specific subscription
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 200) {
+                            alert('Subscribed to topic successfully');
+                        } else {
+                            alert('Error subscribing to topic: ' + data.message);
+                        }
+                    });
+            });
+
+            // Listen for incoming MQTT messages via Socket.IO
+            socket.on('mqttMessage', (data) => {
+                const messageElement = document.createElement('li');
+                messageElement.textContent = `Topic: ${data.topic}, Message: ${data.message}`;
+                document.getElementById('messagesList').appendChild(messageElement);
+            });
+        </script>
+    </body>
+
+</html>

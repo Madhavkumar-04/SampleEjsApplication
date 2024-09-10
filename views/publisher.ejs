@@ -1,0 +1,52 @@
+<%- include('partials/header') %>
+    <div class="container-fluid">
+        <%- include('sections/left-section') %>
+
+            <div class="container mt-4">
+                <header>
+                    <h1 class="mb-4">MQTT Publisher</h1>
+                </header>
+
+                <div>
+                    <h2>Publish Message</h2>
+                    <form id="publishForm" class="form">
+                        <div class="form-group">
+                            <label for="publishTopic">Topic:</label>
+                            <input type="text" class="form-control" id="publishTopic" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="publishMessage">Message:</label>
+                            <input type="text" class="form-control" id="publishMessage" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Publish</button>
+                    </form>
+                </div>
+            </div>
+
+    </div>
+    <script>
+        const socket = io();
+
+        // Handle publish form submission
+        document.getElementById('publishForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const topic = document.getElementById('publishTopic').value;
+            const message = document.getElementById('publishMessage').value;
+
+            fetch('/publish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ topic, msg: message }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 200) {
+                        alert('Message published successfully');
+                    } else {
+                        alert('Error publishing message: ' + data.message);
+                    }
+                });
+        });
+    </script>

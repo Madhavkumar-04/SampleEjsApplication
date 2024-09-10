@@ -1,41 +1,44 @@
-<%- include('partials/header') %>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Left navigation section -->
-            <%- include('sections/left-section') %>
+<!DOCTYPE html>
+<html lang="en">
 
-                <div class="col-md-9">
-                    <!-- Subscribe Form -->
-                    <div class="my-4">
-                        <h2>Subscribe to Topic</h2>
-                        <form id="subscribeForm" class="form-inline">
-                            <div class="form-group mx-sm-3 mb-2">
-                                <label for="subscribeTopic" class="sr-only">Topic</label>
-                                <input type="text" class="form-control" id="subscribeTopic" placeholder="Enter topic"
-                                    required>
-                            </div>
-                            <button type="submit" class="btn btn-primary mb-2">Subscribe</button>
-                        </form>
-                    </div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MQTT Subscriber</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
 
-                    <!-- Messages Table -->
-                    <div class="my-4">
-                        <h2>Messages</h2>
-                        <table class="table table-striped" id="messagesTable">
-                            <thead>
-                                <tr>
-                                    <th>Topic</th>
-                                    <th>Message</th>
-                                </tr>
-                            </thead>
-                            <tbody id="messagesBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-        </div>
-    </div>
+            #messages {
+                margin-top: 20px;
+            }
 
-    <%- include('partials/footer') %>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+
+            th {
+                background-color: #f2f2f2;
+            }
+        </style>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+
+    <body>
+        <header>
+            <h1>MQTT Subscriber</h1>
+        </header>
+
+
         <script>
             const socket = io();
 
@@ -77,3 +80,6 @@
                 messageBody.appendChild(row);
             });
         </script>
+    </body>
+
+</html>
