@@ -37,7 +37,6 @@
 
     <%- include('partials/footer') %>
         <script>
-            const socket = io();
 
             // Handle subscribe form submission
             document.getElementById('subscribeForm').addEventListener('submit', (e) => {
@@ -49,7 +48,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ topic, socketId: socket.id }), // Pass socketId for client-specific subscription
+                    body: JSON.stringify({ topic }), // Pass socketId for client-specific subscription
                 })
                     .then(response => response.json())
                     .then(data => {

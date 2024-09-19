@@ -4,17 +4,24 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const http = require('http');
-const socketIo = require('socket.io');
 const cors = require('cors');
 
 // Initialize Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
 
-// MQTT Configuration
-const MQTT_HOST_NAME = 'mqtts://broker.hivemq.com:8883';
-const mqttClient = mqtt.connect(MQTT_HOST_NAME);
+// MQTT Configuration options
+const options = {
+    port: 8883,                             // Secure MQTT port
+    username: 'Madhav',                     // HiveMQ Cloud username
+    password: 'Madhav@123',                 // HiveMQ Cloud password (masked)
+    protocol: 'mqtts',                      // Secure MQTT connection
+    rejectUnauthorized: true                // Enforce secure connection
+};
+
+// MQTT host details
+const MQTT_HOST_NAME = 'a1b336084b384656a1da67d069d4575c.s1.eu.hivemq.cloud';
+const mqttClient = mqtt.connect(`mqtts://${MQTT_HOST_NAME}`, options);
 
 // Middleware
 app.use(cors()); // Enable CORS for all routes
@@ -27,6 +34,9 @@ app.set('views', path.join(__dirname, 'views'));
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Store subscriptions by client (in memory)
+const clientSubscriptions = {};
+
 // Handle MQTT client connection
 mqttClient.on('connect', () => {
     console.log('Connected to MQTT broker');
@@ -34,6 +44,11 @@ mqttClient.on('connect', () => {
 
 mqttClient.on('error', (error) => {
     console.error('MQTT Connection Error:', error);
+});
+
+// Handle incoming MQTT messages and print them to the terminal
+mqttClient.on('message', (topic, message) => {
+    console.log(`Received message: '${message.toString()}' on topic: '${topic}'`);
 });
 
 // Function to publish a message
@@ -45,8 +60,8 @@ function publish(topic, message, options = {}, callback) {
     });
 }
 
-// Function to subscribe to a topic
-function subscribe(topic, callback) {
+// Function to subscribe to a topic and listen for incoming messages
+function subscribe(topic) {
     mqttClient.subscribe(topic, (error) => {
         if (error) {
             console.error('Subscription Error:', error);
@@ -54,16 +69,7 @@ function subscribe(topic, callback) {
             console.log(`Subscribed to topic: ${topic}`);
         }
     });
-
-    mqttClient.on('message', (topic, message) => {
-        if (callback) {
-            callback(topic, message.toString());
-        }
-    });
 }
-
-// Maintain a record of client subscriptions
-const clientSubscriptions = new Map();
 
 // Define routes
 app.get('/', (req, res) => {
@@ -72,11 +78,6 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
     res.render('dashboard');
-});
-
-app.get('/dashboard/data', (req, res) => {
-    const chartData = generateRandomData();
-    res.json(chartData);
 });
 
 app.get('/settings', (req, res) => {
@@ -90,6 +91,7 @@ app.get('/profile', (req, res) => {
 app.get('/reports', (req, res) => {
     res.render('reports');
 });
+
 app.get('/publishReports', (req, res) => {
     res.render('publisher');
 });
@@ -128,8 +130,8 @@ app.get('/publisher', (req, res) => {
 
 // Route to handle publishing MQTT messages
 app.post('/publish', (req, res) => {
-    const topic = req?.body?.topic;
-    const message = req?.body?.msg;
+    const topic = req.body.topic;
+    const message = req.body.msg;
 
     if (!topic || !message) {
         return res.status(400).json({ status: 400, message: 'Topic and message are required' });
@@ -143,57 +145,17 @@ app.post('/publish', (req, res) => {
     });
 });
 
-// Route to render subscriber page
-app.get('/subscriber', (req, res) => {
-    res.render('hello'); // Render the subscriber page
-});
-
 // Route to handle subscribing to MQTT topics
 app.post('/subscribe', (req, res) => {
-    const topic = req?.body?.topic;
+    const topic = req.body.topic;
 
     if (!topic) {
         return res.status(400).json({ status: 400, message: 'Topic is required' });
     }
 
-    // Update clientSubscriptions map
-    const socketId = req.body.socketId; // Assuming socketId is passed in request
-    if (!clientSubscriptions.has(socketId)) {
-        clientSubscriptions.set(socketId, new Set());
-    }
-    const subscriptions = clientSubscriptions.get(socketId);
-    subscriptions.add(topic);
-
-    subscribe(topic, (topic, message) => {
-        // Emit message only to subscribed clients
-        io.to(socketId).emit('mqttMessage', { topic, message });
-    });
+    subscribe(topic);
 
     res.status(200).json({ status: 200, message: `Subscribed to ${topic}` });
-});
-
-// Socket.IO connection
-io.on('connection', (socket) => {
-    console.log('Client connected to Socket.IO');
-
-    // Initialize client subscription record
-    clientSubscriptions.set(socket.id, new Set());
-
-    // Handle subscription requests from clients
-    socket.on('subscribe', (topic) => {
-        const subscriptions = clientSubscriptions.get(socket.id);
-        subscriptions.add(topic);
-
-        subscribe(topic, (topic, message) => {
-            socket.emit('mqttMessage', { topic, message });
-        });
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Client disconnected from Socket.IO');
-        // Clean up subscriptions on disconnect
-        clientSubscriptions.delete(socket.id);
-    });
 });
 
 // Catch-all route for undefined paths
